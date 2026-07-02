@@ -6,6 +6,10 @@
 
 Todas las modificaciones y mejoras notables de este proyecto se documentarán en este archivo.
 
+## [3.6.0] - 2026-07-02
+### Arreglado
+- **Flujo PWA Estable:** Refactorización manual y definitiva del ciclo de vida del Service Worker y `index.html`. Se eliminó la dependencia del viejo `version.json` para evitar bucles infinitos por culpa de las cachés CDN. Ahora el sistema detecta de forma robusta las actualizaciones escuchando el evento nativo `updatefound` del navegador.
+
 ## [3.5.0] - 2026-07-02
 ### Arreglado
 - **Actualizador PWA (Service Worker):** Se reescribió la estrategia del Service Worker a *Cache-First* para asegurar que el actualizador OTA (Over The Air) detecte cambios correctamente usando el archivo `version.json` sin redescargas invisibles.

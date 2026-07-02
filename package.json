@@ -1,6 +1,6 @@
 {
   "name": "finanzapp",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "description": "Aplicación de Finanzas Personales",
   "main": "main.js",
   "scripts": {
