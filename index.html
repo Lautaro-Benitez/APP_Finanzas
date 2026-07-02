@@ -1455,8 +1455,51 @@
         }
     </script>
 
+    <!-- Modal de Actualización -->
+    <div id="update-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <h2 style="color: var(--primary-color);"><i class="fas fa-arrow-alt-circle-up" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>Nueva versión disponible</h2>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: var(--text-color);">Hemos lanzado una nueva actualización con mejoras y correcciones. Por favor, recarga la página para aplicarla.</p>
+                <button type="button" class="btn btn-primary" id="btn-update-reload" style="width: 100%;"><i class="fas fa-sync-alt"></i> Recargar ahora</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Módulos JavaScript -->
     <script type="module" src="js/app.js"></script>
+
+    <!-- Sistema de versionado -->
+    <script>
+        (function() {
+            const CURRENT_VERSION = "3.3.1";
+            async function checkForUpdates() {
+                try {
+                    const response = await fetch('version.json?t=' + new Date().getTime());
+                    if (!response.ok) return;
+                    const data = await response.json();
+                    if (data.version && data.version !== CURRENT_VERSION) {
+                        document.getElementById('update-modal').classList.add('active');
+                    }
+                } catch (e) {
+                    console.error("Error al comprobar actualizaciones:", e);
+                }
+            }
+            
+            // Comprobar actualizaciones a los 5 segundos de abrir la app
+            setTimeout(checkForUpdates, 5000);
+            
+            // Comprobar periódicamente (cada hora)
+            setInterval(checkForUpdates, 3600000);
+
+            // Funcionalidad del botón
+            document.getElementById('btn-update-reload').addEventListener('click', () => {
+                window.location.reload(true);
+            });
+        })();
+    </script>
 </body>
 
 </html>

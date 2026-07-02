@@ -1,6 +1,19 @@
 # 💰 FinanzApp - Gestión de Finanzas Personales (V3.3.1)
 
-![FinanzApp Logo](icon.png)
+[![Live](https://img.shields.io/badge/live-online-success)](https://lautaro-benitez.github.io/APP_Finanzas/)
+[![Version](https://img.shields.io/badge/version-3.3.1-blue)](CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
+
+![Windows](https://img.shields.io/badge/Windows-supported-blue?style=flat&logo=windows&logoColor=white)
+![macOS](https://img.shields.io/badge/macOS-supported-blue?style=flat&logo=apple&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-supported-blue?style=flat&logo=linux&logoColor=white)
+
+<!-- BADGES_START -->
+[![Electron](https://img.shields.io/badge/Electron-33.4.11-47848F?style=flat&logo=electron&logoColor=white)](https://www.electronjs.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=flat&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![HTML5](https://img.shields.io/badge/HTML5-Vanilla-E34F26?style=flat&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![CSS3](https://img.shields.io/badge/CSS3-Vanilla-1572B6?style=flat&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![Node.js](https://img.shields.io/badge/Node.js-Backend-43853D?style=flat&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 
 **FinanzApp** es una potente aplicación de escritorio diseñada para el control total de tus finanzas personales de manera local, privada y segura. 
 
@@ -50,9 +63,9 @@ npm run pack:win
 
 ## 🔐 Seguridad y Primer Uso
 
-Al iniciar por primera vez, la aplicación te guiará para configurar un **Usuario Admin**. Esta cuenta es local y se utiliza para proteger el acceso a tus datos. 
+**⚠️ Importante:** Durante el primer uso de la aplicación, es necesario **crear un usuario y una contraseña**. 
 
-**Recomendación:** Utiliza la función de "Exportar Datos" en las configuraciones regularmente para mantener un respaldo externo de tu información financiera.
+Toda la información y los datos que ingreses **se guardan localmente en tu propio dispositivo** (en el almacenamiento del navegador) y **NO en la nube**. Por lo tanto, para evitar la pérdida de información en caso de que ocurra algún problema con tu computadora, es **estrictamente necesario que realices backups (copias de seguridad) cada ciertos días** utilizando la opción de "Exportar" dentro de la configuración de la app.
 
 ---
 
