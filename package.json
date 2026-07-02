@@ -1,9 +1,10 @@
 {
   "name": "finanzapp",
-  "version": "3.3.1",
+  "version": "3.4.0",
   "description": "Aplicación de Finanzas Personales",
   "main": "main.js",
   "scripts": {
+    "bump": "node bump.js",
     "start": "electron .",
     "dist": "electron-builder",
     "pack:win": "electron-packager . finanzapp --platform=win32 --arch=x64 --out=dist --icon=icon.ico --overwrite",

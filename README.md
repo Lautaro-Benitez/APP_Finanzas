@@ -1,7 +1,7 @@
-# 💰 FinanzApp - Gestión de Finanzas Personales (V3.3.1)
+# 💰 FinanzApp - Gestión de Finanzas Personales (V3.4.0)
 
 [![Live](https://img.shields.io/badge/live-online-success)](https://lautaro-benitez.github.io/APP_Finanzas/)
-[![Version](https://img.shields.io/badge/version-3.3.1-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.4.0-blue)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
 
 ![Windows](https://img.shields.io/badge/Windows-supported-blue?style=flat&logo=windows&logoColor=white)
@@ -71,8 +71,8 @@ Toda la información y los datos que ingreses **se guardan localmente en tu prop
 
 ## 📄 Licencia y Créditos
 
-- **Desarrollado por:** [IN3DITO®](https://in3dito.com.ar)
+- **Desarrollado por:** [Lautaro Benitez](https://github.com/Lautaro-Benitez)
 - **Tecnologías:** Electron, D3.js, Chart.js, Vanilla CSS & JS.
 
 ---
-© 2026 IN3DITO - Software de Gestión Personal.
+© 2026 Lautaro Benitez - Software de Gestión Personal.

@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinanzApp - Gestión Financiera Familiar</title>
 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d6efd">
+
     <!-- Dependencias externas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -1278,20 +1282,16 @@
                             </div>
                             <div>
                                 <strong style="color: var(--primary);">Desarrollado por:</strong>
-                                <span style="margin-left: 8px;">IN3DITO®</span>
+                                <span style="margin-left: 8px;">Lautaro Benitez</span>
                             </div>
                             <div>
                                 <strong style="color: var(--primary);">País:</strong>
                                 <span style="margin-left: 8px;">Argentina</span>
                             </div>
                             <div>
-                                <strong style="color: var(--primary);">Contacto:</strong>
-                                <span style="margin-left: 8px;">+54 9 261 604 7788</span>
-                            </div>
-                            <div>
                                 <strong style="color: var(--primary);">Web:</strong>
-                                <a href="https://in3dito.com.ar" target="_blank"
-                                    style="margin-left: 8px; color: var(--primary); text-decoration: none; font-weight: 600;">in3dito.com.ar</a>
+                                <a href="https://github.com/Lautaro-Benitez" target="_blank"
+                                    style="margin-left: 8px; color: var(--primary); text-decoration: none; font-weight: 600;">github.com/Lautaro-Benitez</a>
                             </div>
                             <div>
                                 <strong style="color: var(--primary);">Fecha de lanzamiento:</strong>
@@ -1339,7 +1339,8 @@
 
         <!-- Footer -->
         <footer class="app-footer">
-            Powered By <a href="https://in3dito.com.ar" target="_blank">IN3DITO®</a> - 2026 | <span class="app-version-text" data-prefix="V"></span>
+            Powered By <a href="https://github.com/Lautaro-Benitez" target="_blank">Lautaro Benitez</a> - 2026 | <span
+                class="app-version-text" data-prefix="V"></span>
         </footer>
     </div>
 
@@ -1459,11 +1460,30 @@
     <div id="update-modal" class="modal">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
             <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
-                <h2 style="color: var(--primary-color);"><i class="fas fa-arrow-alt-circle-up" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>Nueva versión disponible</h2>
+                <h2 style="color: var(--primary-color);"><i class="fas fa-arrow-alt-circle-up"
+                        style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>Nueva versión disponible</h2>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom: 20px; color: var(--text-color);">Hemos lanzado una nueva actualización con mejoras y correcciones. Por favor, recarga la página para aplicarla.</p>
-                <button type="button" class="btn btn-primary" id="btn-update-reload" style="width: 100%;"><i class="fas fa-sync-alt"></i> Recargar ahora</button>
+                <p style="margin-bottom: 20px; color: var(--text-color);">Hemos lanzado una nueva actualización con
+                    mejoras y correcciones. Por favor, recarga la página para aplicarla.</p>
+                <button type="button" class="btn btn-primary" id="btn-update-reload" style="width: 100%;"><i
+                        class="fas fa-sync-alt"></i> Recargar ahora</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Instalación PWA -->
+    <div id="pwa-install-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <h2 style="color: var(--primary-color);"><i class="fas fa-desktop" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>Instalar FinanzApp</h2>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: var(--text-color);">Instala esta aplicación en tu computadora para acceder más rápido y usarla como un programa nativo de escritorio.</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button type="button" class="btn btn-secondary" id="btn-pwa-cancel" onclick="document.getElementById('pwa-install-modal').classList.remove('active')">Quizás luego</button>
+                    <button type="button" class="btn btn-primary" id="btn-pwa-install"><i class="fas fa-download"></i> Instalar App</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1473,8 +1493,8 @@
 
     <!-- Sistema de versionado -->
     <script>
-        (function() {
-            const CURRENT_VERSION = "3.3.1";
+        (function () {
+            const CURRENT_VERSION = "3.4.0";
             async function checkForUpdates() {
                 try {
                     const response = await fetch('version.json?t=' + new Date().getTime());
@@ -1487,10 +1507,10 @@
                     console.error("Error al comprobar actualizaciones:", e);
                 }
             }
-            
+
             // Comprobar actualizaciones a los 5 segundos de abrir la app
             setTimeout(checkForUpdates, 5000);
-            
+
             // Comprobar periódicamente (cada hora)
             setInterval(checkForUpdates, 3600000);
 
@@ -1499,6 +1519,51 @@
                 window.location.reload(true);
             });
         })();
+    </script>
+
+    <!-- Sistema PWA (Service Worker e Instalación) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => {
+                    console.log('Error al registrar Service Worker:', err);
+                });
+            });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevenir que Chrome muestre su prompt nativo por defecto
+            e.preventDefault();
+            // Guardar el evento para dispararlo luego
+            deferredPrompt = e;
+            // Mostrar nuestro modal personalizado (solo si no se instaló antes)
+            if (!localStorage.getItem('pwa-prompt-dismissed')) {
+                setTimeout(() => {
+                    document.getElementById('pwa-install-modal').classList.add('active');
+                }, 2000); // Mostrarlo a los 2 segundos
+            }
+        });
+
+        document.getElementById('btn-pwa-install').addEventListener('click', async () => {
+            document.getElementById('pwa-install-modal').classList.remove('active');
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('El usuario aceptó la instalación');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        document.getElementById('btn-pwa-cancel').addEventListener('click', () => {
+            localStorage.setItem('pwa-prompt-dismissed', 'true'); // No volver a molestar si lo cancela
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA fue instalada exitosamente');
+        });
     </script>
 </body>
 

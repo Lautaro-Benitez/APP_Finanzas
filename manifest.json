@@ -1,0 +1,16 @@
+{
+  "name": "FinanzApp",
+  "short_name": "FinanzApp",
+  "description": "Gestión Financiera Familiar",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d6efd",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
