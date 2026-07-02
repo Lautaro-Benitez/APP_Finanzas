@@ -1,0 +1,47 @@
+{
+  "name": "finanzapp",
+  "version": "3.3.1",
+  "description": "Aplicación de Finanzas Personales",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "pack:win": "electron-packager . finanzapp --platform=win32 --arch=x64 --out=dist --icon=icon.ico --overwrite",
+    "pack:mac": "electron-packager . finanzapp --platform=darwin --arch=x64 --out=dist --icon=icon.png --overwrite",
+    "pack:mac-arm": "electron-packager . finanzapp --platform=darwin --arch=arm64 --out=dist --icon=icon.png --overwrite",
+    "pack:all": "npm run pack:win && npm run pack:mac && npm run pack:mac-arm"
+  },
+  "keywords": [],
+  "author": "User",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lautaro-Benitez/APP_Finanzas.git"
+  },
+  "homepage": "https://github.com/Lautaro-Benitez/APP_Finanzas#readme",
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "electron-packager": "^17.1.2",
+    "png-to-ico": "^3.0.1"
+  },
+  "build": {
+    "appId": "com.finanzapp.app",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "files": [
+      "**/*",
+      "!dist/*",
+      "!node_modules/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  }
+}

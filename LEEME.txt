@@ -1,0 +1,60 @@
+__________________________________________________________________________
+         ______ _____ _   _  ___  _   _ ______  ___  ____________ 
+        |  ____|_   _| \ | |/ _ \| \ | |___  / / _ \ | ___ \ ___ \
+        | |__    | | |  \| / /_\ \  \| |  / / / /_\ \| |_/ / |_/ /
+        |  __|   | | | . ` |  _  | . ` | / /  |  _  ||  __/|  __/
+        | |     _| |_| |\  | | | | |\  ./ /___| | | || |   | |    
+        |_|    |_____|_| \_\_| |_/_| \_\_____/\_| |_/\_|   \_|    
+__________________________________________________________________________
+
+MANUAL DE INSTALACIÓN Y USO - V3.0.8 (2026)
+__________________________________________________________________________
+
+¡Bienvenido a FinanzApp! 
+Tu aplicación personal para el control de gastos de manera local y segura.
+
+1. REQUISITOS
+   - Sistema Operativo: Windows 10 o Windows 11.
+   - Espacio en disco: Aprox. 200 MB.
+   - No requiere conexión a internet constante.
+
+2. INSTALACIÓN (PORTABLE)
+   Esta aplicación funciona sin instalación tradicional. 
+   Simplemente descomprime y usa.
+
+   Paso a paso:
+   a. Descarga el archivo comprimido (.zip).
+   b. Descomprímelo en una carpeta segura (ej: "Mis Documentos\FinanzApp").
+      IMPORTANTE: No la ejecutes directamente desde dentro del ZIP. 
+      Primero debes extraer todos los archivos.
+   c. Abre la carpeta extraída.
+   d. Busca el archivo "finanzapp.exe" (o simplemente "finanzapp").
+   e. Haz doble clic para iniciar.
+
+3. CREAR ACCESO DIRECTO EN EL ESCRITORIO
+   Para abrir la app más rápido:
+   
+   a. Haz clic derecho sobre el archivo "finanzapp.exe".
+   b. Selecciona "Enviar a" > "Escritorio (crear acceso directo)".
+   c. Ya puedes cerrar la carpeta y usar el icono de tu escritorio.
+
+4. USO Y DATOS
+   - La aplicación inicia completamente vacía/limpia para ti.
+   - Los datos se guardan automáticamnete en tu computadora.
+   - Seguridad: Tus finanzas no se suben a ninguna nube, todo queda en tu PC.
+   - Copias de seguridad: Recomendamos usar la opción "Exportar Datos" 
+     dentro de la app regularmente para tener un respaldo.
+
+5. SOLUCIÓN DE PROBLEMAS
+   - Si Windows muestra una advertencia de "PC protegido", pulsa en 
+     "Más información" y luego en "Ejecutar de todas formas".
+     (Esto ocurre porque la app es nueva y Windows aún no la reconoce).
+
+6. PRIMER INICIO
+   - El sistema solicitariá que cargues los datos del usuario ADMIN para iniciar.
+   - Luego se reinicia y te solicitará los datos cargados anteriormente para iniciar.
+   - En este momento, si tienen copias de seguridad, puedes cargarlas, de lo contrario
+   podras usar la app como lienzo en blanco.
+
+Que disfrutes de tu experiencia con FinanzApp. 
+__________________________________________________________________________

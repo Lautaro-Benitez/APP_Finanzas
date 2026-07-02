@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanzApp - Gestión Financiera Familiar</title>
+
+    <!-- Dependencias externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles/main.css">
+
+
+    <!-- ✅ CORREGIDO: CSP con APIs argentinas permitidas -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; connect-src 'self' https://dolarapi.com https://api.bluelytics.com.ar https://cdnjs.cloudflare.com; img-src 'self' data:;">
+</head>
+
+<body>
+
+    <!-- Login Screen con Recuperación por Pregunta de Seguridad -->
+    <div id="login-screen" class="modal active">
+        <div class="modal-content login-modal">
+
+            <!-- VISTA 0: SETUP INICIAL (PRIMERA VEZ) -->
+            <div id="setup-view" class="login-view">
+                <div class="login-logo" style="margin-bottom: 16px;">
+                    <span class="logo-icon pulse-animation">🚀</span>
+                    <h1 style="font-size: 24px;">Configuración Inicial</h1>
+                    <p class="login-subtitle">Crea tu cuenta de administrador</p>
+                </div>
+
+                <form id="setup-form" class="login-form" style="padding-bottom: 20px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">TU NOMBRE</label>
+                            <input type="text" class="form-input" id="setup-name" required placeholder="Ej: Juan Pérez">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">USUARIO</label>
+                            <input type="text" class="form-input" id="setup-username" required placeholder="Ej: admin">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">CONTRASEÑA</label>
+                        <input type="password" class="form-input" id="setup-password" required
+                            placeholder="Mínimo 6 caracteres" minlength="6">
+                    </div>
+
+                    <div
+                        style="margin-top: 8px; margin-bottom: 12px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                        <h3
+                            style="font-size: 13px; color: var(--primary); margin-bottom: 8px; text-transform: uppercase;">
+                            Seguridad de recuperación</h3>
+
+                        <div class="form-group">
+                            <label class="form-label">PREGUNTA SECRETA</label>
+                            <select class="form-select" id="setup-question">
+                                <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu
+                                    primera mascota?</option>
+                                <option value="¿Cuál es el segundo nombre de tu madre?">¿Cuál es el segundo nombre de tu
+                                    madre?</option>
+                                <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+                                <option value="¿Cuál fue tu primer auto?">¿Cuál fue tu primer auto?</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">RESPUESTA</label>
+                            <input type="text" class="form-input" id="setup-answer" required
+                                placeholder="Tu respuesta secreta">
+                            <small style="color: var(--text-secondary); font-size: 11px;">Esta respuesta te permitirá
+                                recuperar tu acceso si olvidas la contraseña.</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary login-btn">
+                        Finalizar y Comenzar
+                    </button>
+                </form>
+            </div>
+
+            <!-- VISTA 1: LOGIN NORMAL -->
+            <div id="login-view" class="login-view active">
+                <!-- Logo Animado -->
+                <div class="login-logo">
+                    <span class="logo-icon pulse-animation">🪙</span>
+                    <h1>FinanzApp</h1>
+                    <p class="login-subtitle">Sistema de Gestión Financiera</p>
+                </div>
+
+                <!-- Formulario de Login -->
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label class="form-label">USUARIO</label>
+                        <input type="text" class="form-input" name="username" id="login-username" required
+                            autocomplete="username" placeholder="Ingresa tu usuario">
+                        <span class="field-error" id="username-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">CONTRASEÑA</label>
+                        <input type="password" class="form-input" name="password" id="login-password" required
+                            autocomplete="current-password" placeholder="Ingresa tu contraseña">
+                        <span class="field-error" id="password-error"></span>
+                    </div>
+
+                    <div class="form-group" style="margin: -8px 0 0 0;">
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-secondary);">
+                            <input type="checkbox" id="remember-me" style="cursor: pointer;">
+                            <span>Mantener sesión iniciada</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary login-btn" id="login-submit-btn">
+                        <span class="btn-text">Ingresar</span>
+                        <span class="btn-loader" style="display: none;">
+                            <span class="spinner"></span> Ingresando...
+                        </span>
+                    </button>
+
+                    <button type="button" class="btn-link" id="show-recovery-btn">
+                        ¿Olvidaste tu contraseña?
+                    </button>
+                </form>
+            </div>
+
+            <!-- VISTA 2: RECUPERACIÓN PASO 1 (Solicitar Username) -->
+            <div id="recovery-view-1" class="login-view">
+                <div class="recovery-header">
+                    <button type="button" class="btn-back" id="back-to-login-1">
+                        ← Volver al login
+                    </button>
+                    <h2>Recuperar Contraseña</h2>
+                    <p>Ingresa tu nombre de usuario para continuar.</p>
+                </div>
+
+                <form id="recovery-form-1" class="login-form">
+                    <div class="form-group">
+                        <label class="form-label">USUARIO</label>
+                        <input type="text" class="form-input" id="recovery-username" placeholder="Tu nombre de usuario"
+                            autocomplete="username" required>
+                        <span class="field-error" id="recovery-username-error"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary login-btn">
+                        Continuar
+                    </button>
+                </form>
+            </div>
+
+            <!-- VISTA 3: RECUPERACIÓN PASO 2 (Pregunta de Seguridad) -->
+            <div id="recovery-view-2" class="login-view">
+                <div class="recovery-header">
+                    <button type="button" class="btn-back" id="back-to-recovery-1">
+                        ← Volver
+                    </button>
+                    <h2>Pregunta de Seguridad</h2>
+                    <p>Responde correctamente para continuar.</p>
+                </div>
+
+                <form id="recovery-form-2" class="login-form">
+                    <input type="hidden" id="recovery-username-stored">
+
+                    <div class="form-group">
+                        <label class="form-label">PREGUNTA</label>
+                        <div class="security-question-display" id="security-question-text">
+                            Cargando pregunta...
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">TU RESPUESTA</label>
+                        <input type="text" class="form-input" id="security-answer" placeholder="Ingresa tu respuesta"
+                            autocomplete="off" required>
+                        <span class="field-error" id="security-answer-error"></span>
+                        <small style="color: var(--text-secondary); font-size: 11px; margin-top: 4px; display: block;">
+                            No distingue mayúsculas/minúsculas
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary login-btn" id="verify-answer-btn">
+                        <span class="btn-text">Verificar Respuesta</span>
+                        <span class="btn-loader" style="display: none;">
+                            <span class="spinner"></span> Verificando...
+                        </span>
+                    </button>
+
+                    <div id="recovery-attempts-info"
+                        style="text-align: center; margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
+                        <!-- Se llenará con intentos restantes -->
+                    </div>
+                </form>
+            </div>
+
+            <!-- VISTA 4: RECUPERACIÓN PASO 3 (Nueva Contraseña) -->
+            <div id="recovery-view-3" class="login-view">
+                <div class="recovery-header">
+                    <h2>Nueva Contraseña</h2>
+                    <p>Configura tu nueva contraseña.</p>
+                </div>
+
+                <form id="recovery-form-3" class="login-form">
+                    <input type="hidden" id="recovery-username-final">
+                    <input type="text" autocomplete="username" style="display: none;" value="">
+
+                    <div class="form-group">
+                        <label class="form-label">NUEVA CONTRASEÑA</label>
+                        <input type="password" class="form-input" id="new-password" placeholder="Mínimo 6 caracteres"
+                            autocomplete="new-password" required>
+                        <span class="field-error" id="new-password-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">CONFIRMAR CONTRASEÑA</label>
+                        <input type="password" class="form-input" id="confirm-password"
+                            placeholder="Repite la contraseña" autocomplete="new-password" required>
+                        <span class="field-error" id="confirm-password-error"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary login-btn">
+                        Cambiar Contraseña
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- App Container -->
+    <div class="app-container" id="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo" id="sidebar-toggle" title="Click para contraer/expandir">
+                <span>🪙</span>
+                <span class="logo-text">FinanzApp</span>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li>
+                        <div class="nav-link active" data-nav="dashboard">
+                            <span class="nav-icon">🗂️</span>
+                            <span class="nav-text">Dashboard</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" data-nav="transactions">
+                            <span class="nav-icon">🧮</span>
+                            <span class="nav-text">Transacciones</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" data-nav="budgets">
+                            <span class="nav-icon">🧾</span>
+                            <span class="nav-text">Presupuestos</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" data-nav="savings">
+                            <span class="nav-icon">💸</span>
+                            <span class="nav-text">Ahorros</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" data-nav="loans">
+                            <span class="nav-icon">💳</span>
+                            <span class="nav-text">Préstamos</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" data-nav="wallets">
+                            <span class="nav-icon">💰</span>
+                            <span class="nav-text">Cajas/Billeteras</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" data-nav="pending-payments">
+                            <span class="nav-icon">💳</span>
+                            <span class="nav-text">Cuotas Pendientes</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" data-nav="reports">
+                            <span class="nav-icon">💾</span>
+                            <span class="nav-text">Reportes</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" data-nav="settings">
+                            <span class="nav-icon">⚙️</span>
+                            <span class="nav-text">Configuración</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" data-nav="about">
+                            <span class="nav-icon">ℹ️</span>
+                            <span class="nav-text">Acerca de</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="nav-link" id="logout-btn">
+                            <span class="nav-icon">🚪</span>
+                            <span class="nav-text">Salir</span>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <!-- Dashboard -->
+
+            <div id="dashboard-view" class="view active">
+
+                <!-- HEADER REORGANIZADO -->
+                <div class="view-header" style="margin-bottom: 32px;">
+                    <h1 class="view-title">Dashboard</h1>
+
+                    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                        <!-- Cotización Centro -->
+                        <div id="currency-indicator"
+                            style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 16px; display: flex; align-items: center; gap: 12px; font-size: 14px;">
+                            <strong style="color: var(--primary);">💲</strong>
+                            <span><strong>USD:</strong> $ <span id="usd-rate">---</span></span>
+                            <span style="color: var(--border-color);">|</span>
+                            <span><strong>EUR:</strong> $ <span id="eur-rate">---</span></span>
+                        </div>
+
+                        <!-- Filtro Temporal Derecha -->
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <select id="dashboard-period" class="form-select" style="width: auto; min-width: 150px;">
+                                <option value="week">Esta Semana</option>
+                                <option value="month" selected>Este Mes</option>
+                                <option value="quarter">Este Trimestre</option>
+                                <option value="year">Este Año</option>
+                                <option value="specific-month">📅 Mes Específico</option>
+                                <option value="specific-year">📅 Año Específico</option>
+                                <option value="custom-range">📅 Rango Personalizado</option>
+                            </select>
+
+                            <!-- Controles adicionales (se muestran según selección) -->
+                            <div id="month-year-selector" style="display: none; gap: 8px;">
+                                <select id="specific-month" class="form-select" style="width: auto;">
+                                    <option value="0">Enero</option>
+                                    <option value="1">Febrero</option>
+                                    <option value="2">Marzo</option>
+                                    <option value="3">Abril</option>
+                                    <option value="4">Mayo</option>
+                                    <option value="5">Junio</option>
+                                    <option value="6">Julio</option>
+                                    <option value="7">Agosto</option>
+                                    <option value="8">Septiembre</option>
+                                    <option value="9">Octubre</option>
+                                    <option value="10">Noviembre</option>
+                                    <option value="11">Diciembre</option>
+                                </select>
+                                <input type="number" id="specific-year-input" class="form-input" placeholder="Año"
+                                    min="2020" max="2099" style="width: 100px;">
+                            </div>
+
+                            <div id="year-only-selector" style="display: none;">
+                                <input type="number" id="year-only-input" class="form-input" placeholder="Año"
+                                    min="2020" max="2099" style="width: 100px;">
+                            </div>
+
+                            <div id="custom-range-selector" style="display: none; gap: 8px;">
+                                <input type="date" id="custom-start-date" class="form-input" style="width: auto;">
+                                <span style="color: var(--text-secondary);">hasta</span>
+                                <input type="date" id="custom-end-date" class="form-input" style="width: auto;">
+                            </div>
+
+                            <button id="apply-custom-filter" class="btn btn-primary"
+                                style="display: none; padding: 8px 16px;">
+                                Aplicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARDS PRINCIPALES - 6 COLUMNAS -->
+                <div class="grid grid-6" style="margin-bottom: 32px;">
+
+                    <!-- CARD 1: FINANZAS -->
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <span style="font-size: 24px;">⚖️</span>
+                            <h2 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em;">Finanzas
+                            </h2>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <!-- Ingresos -->
+                            <div>
+                                <div class="stats-label" style="margin-bottom: 6px;">INGRESOS</div>
+                                <div style="display: flex; align-items: baseline; gap: 8px;">
+                                    <div class="stats-value income" id="total-income"
+                                        style="font-size: 28px; margin: 0;">$ 0.00</div>
+                                    <span id="income-comparison" class="comparison-badge"></span>
+                                </div>
+                            </div>
+
+                            <!-- Gastos -->
+                            <div>
+                                <div class="stats-label" style="margin-bottom: 6px;">GASTOS</div>
+                                <div style="display: flex; align-items: baseline; gap: 8px;">
+                                    <div class="stats-value expense" id="total-expenses"
+                                        style="font-size: 28px; margin: 0;">$ 0.00</div>
+                                    <span id="expenses-comparison" class="comparison-badge"></span>
+                                </div>
+                            </div>
+
+                            <!-- Balance con animación -->
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+                                <div class="stats-label" style="margin-bottom: 6px;">BALANCE</div>
+                                <div style="display: flex; align-items: baseline; gap: 8px;">
+                                    <div class="stats-value balance balance-animated" id="net-balance"
+                                        style="font-size: 28px; margin: 0;">$ 0.00</div>
+                                    <span id="balance-comparison" class="comparison-badge"></span>
+                                </div>
+                                <div
+                                    style="margin-top: 8px; font-size: 11px; color: var(--text-secondary); font-style: italic;">
+                                    * vs mes anterior
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD 2: RESUMEN DE CAJAS -->
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <span style="font-size: 24px;">💰</span>
+                            <h2 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em;">Cajas
+                            </h2>
+                        </div>
+
+                        <div id="wallets-summary-card"></div>
+                    </div>
+
+                    <!-- CARD 3: ALERTAS DE PRESUPUESTOS -->
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <span style="font-size: 24px;">⚠️</span>
+                            <h2 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em;">Alertas
+                            </h2>
+                        </div>
+
+                        <div id="budget-alerts-summary" style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- OK -->
+                            <div
+                                style="display: flex; flex-direction: column; gap: 4px; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 3px solid var(--success);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: var(--success); font-weight: 600;">🟢
+                                        OK</span>
+                                    <span id="alerts-ok-count"
+                                        style="font-size: 20px; font-weight: 700; color: var(--success);">0</span>
+                                </div>
+                                <div id="alerts-ok-list"
+                                    style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;"></div>
+                            </div>
+
+                            <!-- ADVERTENCIAS -->
+                            <div
+                                style="display: flex; flex-direction: column; gap: 4px; padding: 12px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border-left: 3px solid var(--warning);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: var(--warning); font-weight: 600;">🟡
+                                        ADVERTENCIAS</span>
+                                    <span id="alerts-warning-count"
+                                        style="font-size: 20px; font-weight: 700; color: var(--warning);">0</span>
+                                </div>
+                                <div id="alerts-warning-list"
+                                    style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;"></div>
+                            </div>
+
+                            <!-- CRÍTICAS -->
+                            <div
+                                style="display: flex; flex-direction: column; gap: 4px; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border-left: 3px solid var(--danger);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: var(--danger); font-weight: 600;">🔴
+                                        CRÍTICAS</span>
+                                    <span id="alerts-danger-count"
+                                        style="font-size: 20px; font-weight: 700; color: var(--danger);">0</span>
+                                </div>
+                                <div id="alerts-danger-list"
+                                    style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD 4: PRÉSTAMOS -->
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <span style="font-size: 24px;">💳</span>
+                            <h2 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em;">Préstamos
+                            </h2>
+                        </div>
+
+                        <div id="loans-summary-card" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div>
+                                <div class="stats-label" style="margin-bottom: 6px;">PRESTADO</div>
+                                <div class="stats-value income" id="dashboard-loans-lent" style="font-size: 20px;">$
+                                    0.00</div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                                    <span id="dashboard-loans-lent-count">0</span> activos
+                                </div>
+                            </div>
+                            <div>
+                                <div class="stats-label" style="margin-bottom: 6px;">DEUDAS</div>
+                                <div class="stats-value expense" id="dashboard-loans-borrowed" style="font-size: 20px;">
+                                    $ 0.00</div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                                    <span id="dashboard-loans-borrowed-count">0</span> activas
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 12px;">
+                                <div class="stats-label" style="margin-bottom: 6px;">BALANCE NETO</div>
+                                <div class="stats-value balance" id="dashboard-loans-net" style="font-size: 20px;">$
+                                    0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD 5: AHORROS -->
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <span style="font-size: 24px;">💸</span>
+                            <h2 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em;">Ahorros
+                            </h2>
+                        </div>
+
+                        <div id="savings-summary-card" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div>
+                                <div class="stats-label" style="margin-bottom: 6px;">TOTAL AHORRADO</div>
+                                <div class="stats-value income" id="dashboard-savings-total" style="font-size: 20px;">$
+                                    0.00</div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                                    <span id="dashboard-savings-count">0</span> objetivos
+                                </div>
+                            </div>
+                            <div>
+                                <div class="stats-label" style="margin-bottom: 6px;">PROGRESO</div>
+                                <div class="stats-value" id="dashboard-savings-progress" style="font-size: 20px;">0%
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">
+                                    Promedio de cumplimiento
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD 6: ÚLTIMAS TRANSACCIONES -->
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <span style="font-size: 24px;">🧮</span>
+                            <h2 style="margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em;">Recientes
+                            </h2>
+                        </div>
+
+                        <div id="recent-transactions-card"
+                            style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: scroll; scrollbar-width: none; -ms-overflow-style: none;">
+                            <!-- Se llenará dinámicamente -->
+                            <div
+                                style="text-align: center; padding: 20px; color: var(--text-secondary); font-size: 13px;">
+                                Sin transacciones recientes
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACORDEONES - TODOS VERTICALES CON ESPACIADO UNIFORME -->
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+
+
+                    <!-- Gráfico: Tendencias Financieras -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" data-accordion="metrics-chart">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 18px;">📈</span>
+                                <span style="font-weight: 600; font-size: 16px;">Tendencias Financieras</span>
+                            </span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div style="display: flex; gap: 12px; margin-bottom: 12px; font-size: 12px;">
+                                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                    <input type="checkbox" id="show-income" checked>
+                                    <span>Ingresos</span>
+                                </label>
+                                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                    <input type="checkbox" id="show-expenses" checked>
+                                    <span>Gastos</span>
+                                </label>
+                                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                    <input type="checkbox" id="show-balance" checked>
+                                    <span>Balance</span>
+                                </label>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="metrics-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico: Gastos por Categoría -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" data-accordion="category-chart">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 18px;">👎</span>
+                                <span style="font-weight: 600; font-size: 16px;">Gastos por Categoría</span>
+                            </span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="chart-container">
+                                <canvas id="category-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ✅ NUEVO: Gráfico de Ingresos por Categoría -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" data-accordion="income-chart">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 18px;">👍</span>
+                                <span style="font-weight: 600; font-size: 16px;">Ingresos por Categoría</span>
+                            </span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="chart-container">
+                                <canvas id="income-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Acordion Ranking de Gastos e Ingresos -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" data-accordion="">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-weight: 600; font-size: 16px;">🏆 Ranking mensual</span>
+                            </span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content" id="ranking-container"
+                            style="font-size: 13px; line-height: 1.8;">
+                            <div style="color: var(--text-secondary); text-align: center; padding: 20px 0;">
+                                Calculando...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acordion Velocidad de Gasto -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" data-accordion="">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-weight: 600; font-size: 16px;">🔥 Velocidad de Gasto</span>
+                            </span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content" id="burn-rate-container"
+                            style="font-size: 13px; line-height: 1.8;">
+                            <div style="color: var(--text-secondary); text-align: center; padding: 20px 0;">
+                                Calculando...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acordion Fin de Mes -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" data-accordion="">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-weight: 600; font-size: 16px;">📈 Proyección Mes</span>
+                            </span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content" id="prediction-container"
+                            style="font-size: 13px; line-height: 1.8;">
+                            <div style="color: var(--text-secondary); text-align: center; padding: 20px 0;">
+                                Calculando...
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Transacciones -->
+            <div id="transactions-view" class="view">
+                <div class="view-header">
+                    <h1 class="view-title">Transacciones</h1>
+                    <button class="btn btn-primary" id="new-transaction-btn">+ Nueva Transaccion</button>
+                </div>
+
+                <!-- Acordeón de Filtros -->
+                <div class="accordion-item" style="margin-bottom: 16px;">
+                    <div class="accordion-header" data-accordion="transactions-filters">
+                        <span style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 18px;">🔍</span>
+                            <span style="font-weight: 600; font-size: 16px;">Filtros de Búsqueda</span>
+                        </span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <!-- Fila 1: Búsqueda -->
+                            <div>
+                                <label class="form-label">Búsqueda por palabra clave</label>
+                                <input type="text" id="tx-search" class="form-input"
+                                    placeholder="🔍 Buscar en descripción, categoría, usuario...">
+                            </div>
+
+                            <!-- Fila 2: Tipo y Categoría -->
+                            <div class="grid grid-2" style="gap: 12px;">
+                                <div>
+                                    <label class="form-label">Tipo de transacción</label>
+                                    <select id="tx-filter-type" class="form-select">
+                                        <option value="">Todos los tipos</option>
+                                        <option value="income">Ingresos</option>
+                                        <option value="expense">Gastos</option>
+                                        <option value="loan">Préstamos</option>
+                                        <option value="saving">Ahorros</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Categoría</label>
+                                    <select id="tx-filter-category" class="form-select">
+                                        <option value="">Todas las categorías</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Fila 3: Subcategoría y Usuario -->
+                            <div class="grid grid-2" style="gap: 12px;">
+                                <div>
+                                    <label class="form-label">Subcategoría</label>
+                                    <select id="tx-filter-subcategory" class="form-select">
+                                        <option value="">Todas las subcategorías</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Usuario</label>
+                                    <select id="tx-filter-user" class="form-select">
+                                        <option value="">Todos los usuarios</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Fila 4: Forma de Pago y Período -->
+                            <div class="grid grid-2" style="gap: 12px;">
+                                <div>
+                                    <label class="form-label">Forma de pago</label>
+                                    <select id="tx-filter-payment" class="form-select">
+                                        <option value="">Todas las formas de pago</option>
+                                        <option value="Efectivo">Efectivo</option>
+                                        <option value="Débito">Débito</option>
+                                        <option value="Crédito">Crédito</option>
+                                        <option value="Transferencia">Transferencia</option>
+                                        <option value="Ahorro">Ahorro</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Período temporal</label>
+                                    <select id="tx-filter-period" class="form-select">
+                                        <option value="all">Todas las fechas</option>
+                                        <option value="week">Esta Semana</option>
+                                        <option value="month" selected>Este Mes</option>
+                                        <option value="quarter">Este Trimestre</option>
+                                        <option value="year">Este Año</option>
+                                        <option value="custom">Rango Personalizado</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Fila 5: Rango de fechas personalizado (oculto por defecto) -->
+                            <div id="tx-custom-date-range" class="grid grid-2" style="display: none; gap: 12px;">
+                                <div>
+                                    <label class="form-label">Fecha desde</label>
+                                    <input type="date" id="tx-filter-start-date" class="form-input">
+                                </div>
+                                <div>
+                                    <label class="form-label">Fecha hasta</label>
+                                    <input type="date" id="tx-filter-end-date" class="form-input">
+                                </div>
+                            </div>
+
+                            <!-- Botón Limpiar Filtros -->
+                            <div
+                                style="display: flex; justify-content: flex-end; padding-top: 8px; padding-bottom: 12px; border-top: 1px solid var(--border-color);">
+                                <button id="tx-clear-filters" class="btn btn-secondary"
+                                    style="display: flex; align-items: center; gap: 6px;">
+                                    <span>Limpiar Filtros</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Tendencias Filtradas -->
+                <div class="accordion-item" style="margin-bottom: 16px;">
+                    <div class="accordion-header" data-accordion="transactions-trend-chart">
+                        <span style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 18px;">📊</span>
+                            <span style="font-weight: 600; font-size: 16px;">Tendencia de Transacciones Filtradas</span>
+                        </span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div style="display: flex; gap: 12px; margin-bottom: 12px; font-size: 12px; flex-wrap: wrap;">
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                <input type="checkbox" id="tx-chart-show-income" checked>
+                                <span>Ingresos</span>
+                            </label>
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                <input type="checkbox" id="tx-chart-show-expenses" checked>
+                                <span>Gastos</span>
+                            </label>
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                <input type="checkbox" id="tx-chart-show-balance">
+                                <span>Balance</span>
+                            </label>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="transactions-trend-chart"></canvas>
+                        </div>
+                        <div id="tx-chart-summary"
+                            style="margin-top: 12px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; font-size: 13px;">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controles de paginación SUPERIOR -->
+                <div class="card"
+                    style="margin-bottom: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: var(--text-secondary); font-size: 13px;">Mostrar:</span>
+                        <select id="tx-page-size-top" class="form-select tx-page-size-control"
+                            style="width: auto; padding: 6px 10px;">
+                            <option value="20">20</option>
+                            <option value="30" selected>30</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span style="color: var(--text-secondary); font-size: 13px;">por página</span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="tx-pagination-info" style="color: var(--text-secondary); font-size: 13px;">0 - 0 de
+                            0</span>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="tx-first-page btn btn-secondary" style="padding: 6px 12px;"
+                                title="Primera página">⏮</button>
+                            <button class="tx-prev-page btn btn-secondary" style="padding: 6px 12px;"
+                                title="Anterior">◀</button>
+                            <button class="tx-next-page btn btn-secondary" style="padding: 6px 12px;"
+                                title="Siguiente">▶</button>
+                            <button class="tx-last-page btn btn-secondary" style="padding: 6px 12px;"
+                                title="Última página">⏭</button>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div id="transaction-list"></div>
+
+                <!-- Controles de paginación INFERIOR -->
+                <div class="card"
+                    style="margin-top: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: var(--text-secondary); font-size: 13px;">Mostrar:</span>
+                        <select id="tx-page-size-bottom" class="form-select tx-page-size-control"
+                            style="width: auto; padding: 6px 10px;">
+                            <option value="20">20</option>
+                            <option value="30" selected>30</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span style="color: var(--text-secondary); font-size: 13px;">por página</span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="tx-pagination-info" style="color: var(--text-secondary); font-size: 13px;">0 - 0 de
+                            0</span>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="tx-first-page btn btn-secondary" style="padding: 6px 12px;"
+                                title="Primera página">⏮</button>
+                            <button class="tx-prev-page btn btn-secondary" style="padding: 6px 12px;"
+                                title="Anterior">◀</button>
+                            <button class="tx-next-page btn btn-secondary" style="padding: 6px 12px;"
+                                title="Siguiente">▶</button>
+                            <button class="tx-last-page btn btn-secondary" style="padding: 6px 12px;"
+                                title="Última página">⏭</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budgets -->
+            <div id="budgets-view" class="view">
+                <div class="view-header">
+                    <h1 class="view-title">Presupuestos</h1>
+                    <button class="btn btn-primary" id="new-budget-btn">+ Nuevo Presupuesto</button>
+                </div>
+                <div id="budget-list"></div>
+            </div>
+
+            <!-- Savings -->
+            <div id="savings-view" class="view">
+                <div class="view-header">
+                    <h1 class="view-title">Ahorros</h1>
+                    <button class="btn btn-primary" id="new-savings-btn">+ Nuevo Ahorro</button>
+                </div>
+                <div id="savings-list"></div>
+            </div>
+
+            <!-- Loans -->
+            <div id="loans-view" class="view">
+                <div class="view-header">
+                    <h1 class="view-title">Préstamos</h1>
+                    <button class="btn btn-primary" id="new-loan-btn">+ Nuevo Préstamo</button>
+                </div>
+
+                <!-- Resumen de Préstamos -->
+                <div class="grid grid-3" style="margin-bottom: 24px;">
+                    <div class="card stats-card">
+                        <div class="stats-label">Prestado (Pendiente)</div>
+                        <div class="stats-value income" id="loans-lent-pending">$ 0.00</div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                            <span id="loans-lent-count">0</span> préstamos activos
+                        </div>
+                    </div>
+                    <div class="card stats-card">
+                        <div class="stats-label">Deudas (Pendiente)</div>
+                        <div class="stats-value expense" id="loans-borrowed-pending">$ 0.00</div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                            <span id="loans-borrowed-count">0</span> deudas activas
+                        </div>
+                    </div>
+                    <div class="card stats-card">
+                        <div class="stats-label">Balance Neto</div>
+                        <div class="stats-value balance" id="loans-net-balance">$ 0.00</div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                            Préstamos - Deudas
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs: Prestados / Recibidos -->
+                <div class="card" style="margin-bottom: 16px; padding: 12px;">
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary active" id="loans-tab-all" data-tab="all">
+                            Todos
+                        </button>
+                        <button class="btn btn-secondary" id="loans-tab-lent" data-tab="lent">
+                            💸 Prestados
+                        </button>
+                        <button class="btn btn-secondary" id="loans-tab-borrowed" data-tab="borrowed">
+                            💰 Recibidos
+                        </button>
+                        <button class="btn btn-secondary" id="loans-tab-overdue" data-tab="overdue">
+                            ⚠️ Vencidos
+                        </button>
+                    </div>
+                </div>
+
+                <div id="loans-list"></div>
+            </div>
+
+            <!-- Wallets -->
+            <div id="wallets-view" class="view">
+                <div class="view-header">
+                    <h1 class="view-title">Cajas y Billeteras</h1>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button class="btn btn-success" id="transfer-wallet-btn">
+                            Transferir
+                        </button>
+                        <button class="btn btn-primary" id="new-wallet-btn">
+                            + Nueva Caja
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-3">
+                    <div class="card stats-card">
+                        <div class="stats-label">Total en Cajas</div>
+                        <div class="stats-value balance" id="total-wallets">$ 0.00</div>
+                    </div>
+                    <div class="card stats-card">
+                        <div class="stats-label">Cantidad</div>
+                        <div class="stats-value" id="wallets-count">0</div>
+                    </div>
+                    <div class="card stats-card">
+                        <div class="stats-label">Saldo Promedio</div>
+                        <div class="stats-value" id="avg-wallet">$ 0.00</div>
+                    </div>
+                </div>
+
+                <div id="wallets-list" style="margin-top: 24px;"></div>
+            </div>
+
+            <!-- 🆕 VISTA: Cuotas Pendientes -->
+            <div id="pending-payments-view" class="view">
+                <div class="view-header">
+                    <h1 class="view-title">Cuotas Pendientes</h1>
+                </div>
+                <div id="pending-payments-list"></div>
+            </div>
+
+            <!-- Reports -->
+            <div id="reports-view" class="view">
+                <div class="view-header">
+                    <h1 class="view-title">Exportar / Importar</h1>
+                </div>
+
+                <!-- ✅ NUEVO: Card de Estado del Sistema -->
+                <div class="card"
+                    style="margin-bottom: 24px; background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);">
+                    <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        <span>📊</span> Estado del Sistema
+                    </h3>
+                    <div class="grid grid-3" style="gap: 16px;">
+                        <div
+                            style="text-align: center; padding: 12px; background: var(--bg-primary); border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">
+                                TRANSACCIONES</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--primary);" id="system-tx-count">
+                                0</div>
+                        </div>
+                        <div
+                            style="text-align: center; padding: 12px; background: var(--bg-primary); border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">PRESUPUESTOS
+                            </div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--primary);"
+                                id="system-budgets-count">0</div>
+                        </div>
+                        <div
+                            style="text-align: center; padding: 12px; background: var(--bg-primary); border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">
+                                CAJAS/WALLETS</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--primary);"
+                                id="system-wallets-count">0</div>
+                        </div>
+                    </div>
+                    <div id="last-backup-info"
+                        style="margin-top: 16px; padding: 12px; background: var(--bg-primary); border-radius: 8px; border-left: 3px solid var(--warning);">
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            <strong>⚠️ Último backup:</strong> <span id="last-backup-date">Nunca</span>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                            💡 Se recomienda hacer backups regularmente
+                        </div>
+                    </div>
+
+                    <!-- ✅ NUEVO: Indicador de Almacenamiento -->
+                    <div id="storage-indicator"
+                        style="margin-top: 16px; padding: 12px; background: var(--bg-primary); border-radius: 8px; border-left: 3px solid var(--primary);">
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+                            <strong>💾 Almacenamiento:</strong> <span id="storage-percentage">0%</span>
+                        </div>
+                        <div class="progress-bar" style="height: 6px;">
+                            <div class="progress-fill" id="storage-progress" style="width: 0%;"></div>
+                        </div>
+                        <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">
+                            <span id="storage-used">0 MB</span> de <span id="storage-limit">5 MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <!-- Card Exportar -->
+                    <div class="card">
+                        <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <span>📤</span> Exportar Datos
+                        </h3>
+
+                        <!-- Filtros rápidos de período -->
+                        <div style="margin-bottom: 16px;">
+                            <label class="form-label">Período rápido</label>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;"
+                                    onclick="window.uiManager.setExportPeriod('month')">Este Mes</button>
+                                <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;"
+                                    onclick="window.uiManager.setExportPeriod('quarter')">Trimestre</button>
+                                <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;"
+                                    onclick="window.uiManager.setExportPeriod('year')">Este Año</button>
+                                <button class="btn btn-secondary" style="font-size: 11px; padding: 6px 12px;"
+                                    onclick="window.uiManager.setExportPeriod('all')">Todo</button>
+                            </div>
+                        </div>
+
+                        <!-- Rango manual -->
+                        <div class="form-row" style="margin-bottom: 16px;">
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label">Desde</label>
+                                <input type="date" class="form-input" id="export-start">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label class="form-label">Hasta</label>
+                                <input type="date" class="form-input" id="export-end">
+                            </div>
+                        </div>
+
+                        <!-- Botones de exportación -->
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <button class="btn btn-primary" id="export-json-btn" style="justify-content: center;">
+                                📄 Exportar JSON (Transacciones)
+                            </button>
+                            <button class="btn btn-success" id="export-excel-btn" style="justify-content: center;">
+                                📊 Exportar Excel (Completo)
+                            </button>
+                            <button class="btn btn-secondary" id="create-backup-btn" style="justify-content: center;">
+                                💾 Backup Completo (Incluye contraseñas)
+                            </button>
+                        </div>
+
+                        <div
+                            style="margin-top: 12px; padding: 10px; background: var(--bg-secondary); border-radius: 6px; font-size: 11px; color: var(--text-secondary);">
+                            <strong>ℹ️ Nota:</strong> El backup completo incluye TODO (transacciones, presupuestos,
+                            ahorros, wallets, usuarios con contraseñas). Guárdalo en un lugar seguro.
+                        </div>
+                    </div>
+
+                    <!-- Card Importar -->
+                    <div class="card">
+                        <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <span>📥</span> Importar Backup
+                        </h3>
+
+                        <div class="form-group">
+                            <label class="form-label">Seleccionar archivo de backup</label>
+                            <input type="file" class="form-input" id="import-file" accept=".json">
+                        </div>
+
+                        <!-- Preview del archivo seleccionado -->
+                        <div id="file-preview"
+                            style="display: none; margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; border-left: 3px solid var(--primary);">
+                            <div style="font-size: 12px; margin-bottom: 8px;">
+                                <strong>📁 Archivo:</strong> <span id="file-name">-</span>
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">
+                                <strong>Tamaño:</strong> <span id="file-size">-</span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-warning" id="import-backup-btn"
+                            style="width: 100%; justify-content: center;">
+                            ⚠️ Restaurar Backup (Reemplaza TODO)
+                        </button>
+
+                        <!-- Advertencias -->
+                        <div
+                            style="margin-top: 16px; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border-left: 3px solid var(--danger);">
+                            <div style="font-size: 12px; color: var(--danger); font-weight: 600; margin-bottom: 6px;">
+                                ⚠️ ADVERTENCIA
+                            </div>
+                            <ul
+                                style="font-size: 11px; color: var(--text-secondary); margin: 0; padding-left: 20px; line-height: 1.6;">
+                                <li>Esta acción REEMPLAZARÁ todos los datos actuales</li>
+                                <li>Se recomienda hacer un backup antes de importar</li>
+                                <li>El archivo será validado antes de importar</li>
+                                <li>Solo archivos JSON de FinanzApp son compatibles</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div id="settings-view" class="view">
+                <div class="view-header">
+                    <h1 class="view-title">Configuración</h1>
+                </div>
+
+                <!-- Acordion Usuarios -->
+                <div class="accordion-item">
+                    <div class="accordion-header" data-accordion="income-chart">
+                        <span style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-weight: 600; font-size: 16px;">🔐 Usuarios</span>
+                        </span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div id="users-list"></div>
+                        <button class="btn btn-primary" id="new-user-btn"
+                            style="margin-top: 12px; margin-bottom: 12px; width: 100%;">+ Agregar Usuario</button>
+                    </div>
+                </div>
+
+                <!-- Acordion Tarjetas -->
+                <div class="accordion-item">
+                    <div class="accordion-header" data-accordion="income-chart">
+                        <span style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-weight: 600; font-size: 16px;">💳 Tarjetas</span>
+                        </span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div id="cards-list"></div>
+                        <button class="btn btn-success" id="new-card-btn"
+                            style="margin-top: 12px; margin-bottom: 12px; width: 100%;">+ Agregar Tarjetas</button>
+                    </div>
+                </div>
+
+                <!-- Acordion Divizas -->
+                <div class="accordion-item">
+                    <div class="accordion-header" data-accordion="income-chart">
+                        <span style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-weight: 600; font-size: 16px;">💵 Configuración de Monedas</span>
+                        </span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                            Configura las tasas de cambio para conversiones automáticas
+                        </p>
+                        <button class="btn btn-primary" id="currency-settings-btn"
+                            style="margin-top: 12px; margin-bottom: 12px; width: 100%;">⚙️ Configurar Monedas</button>
+                    </div>
+                </div>
+
+
+                <!-- Acordion Categorias -->
+                <div class="accordion-item">
+                    <div class="accordion-header" data-accordion="income-chart">
+                        <span style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-weight: 600; font-size: 16px;">📚 Categorías</span>
+                        </span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div id="categories-config"></div>
+                    </div>
+                </div>
+
+
+                <!-- Zona de Peligro -->
+                <div class="card danger-zone" style="margin-top: 20px; border: 2px solid var(--danger);">
+                    <h3 style="margin-bottom: 16px; color: var(--danger);">⛔ Zona de Peligro</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Estas acciones no se pueden deshacer. Procede con cuidado.
+                    </p>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-danger" id="clear-data-btn">🗑️ Restaurar sistema</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acerca de -->
+            <div id="about-view" class="view">
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <h1 class="view-title" style="text-align: center; margin-bottom: 24px;">Acerca de FinanzApp</h1>
+                </div>
+
+                <div class="card" style="max-width: 700px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="font-size: 64px; margin-bottom: 12px;">🪙</div>
+                        <h2 style="margin-bottom: 8px;">FinanzApp</h2>
+                        <p style="color: var(--text-secondary); font-size: 14px;">Sistema de Gestión Financiera Familiar
+                        </p>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                        <div style="display: grid; gap: 16px;">
+                            <div>
+                                <strong style="color: var(--primary);">Versión:</strong>
+                                <span class="app-version-text" style="margin-left: 8px;"></span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--primary);">Desarrollado por:</strong>
+                                <span style="margin-left: 8px;">IN3DITO®</span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--primary);">País:</strong>
+                                <span style="margin-left: 8px;">Argentina</span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--primary);">Contacto:</strong>
+                                <span style="margin-left: 8px;">+54 9 261 604 7788</span>
+                            </div>
+                            <div>
+                                <strong style="color: var(--primary);">Web:</strong>
+                                <a href="https://in3dito.com.ar" target="_blank"
+                                    style="margin-left: 8px; color: var(--primary); text-decoration: none; font-weight: 600;">in3dito.com.ar</a>
+                            </div>
+                            <div>
+                                <strong style="color: var(--primary);">Fecha de lanzamiento:</strong>
+                                <span style="margin-left: 8px;">2026</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 24px;">
+                            <a href="https://wa.me/5492616047788?text=*Reporte%20de%20Finanzapp*%0AUsuario:%0AMail:%0AMensaje:%0A%0AGracias%20por%20comunicarte,%20te%20estaremos%20respondiendo%20a%20la%20brevedad."
+                                target="_blank" class="btn btn-whatsapp" style="width: 100%; text-decoration: none;">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                </svg>
+                                <span>Reportar Problema / Contacto</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-color); margin-top: 24px; padding-top: 20px;">
+                        <h4 style="margin-bottom: 12px;">✨ Características Principales:</h4>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+                            <li>💰 <strong>Gestión Multi-Moneda:</strong> Opera con ARS, USD y EUR con conversión
+                                automática</li>
+                            <li>📊 <strong>Análisis Inteligente:</strong> Proyecciones de fin de mes y velocidad de
+                                gasto</li>
+                            <li>🎯 <strong>Presupuestos Dinámicos:</strong> Control de gastos por categoría con alertas
+                                automáticas</li>
+                            <li>💎 <strong>Objetivos de Ahorro:</strong> Seguimiento detallado con historial de aportes
+                                y retiros</li>
+                            <li>🏦 <strong>Cajas y Billeteras:</strong> Gestión unificada con transferencias automáticas
+                            </li>
+                            <li>📈 <strong>Reportes Avanzados:</strong> Gráficos interactivos y exportación a Excel/JSON
+                            </li>
+                            <li>🔄 <strong>Backup Completo:</strong> Exportación e importación total de datos</li>
+                            <li>👥 <strong>Multi-Usuario:</strong> Sistema de permisos con roles admin/usuario</li>
+                            <li>💳 <strong>Gestión de Tarjetas:</strong> Vinculación con cajas y control de cuotas</li>
+                            <li>💱 <strong>Cotizaciones en Tiempo Real:</strong> Actualización automática desde APIs
+                                argentinas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            Powered By <a href="https://in3dito.com.ar" target="_blank">IN3DITO®</a> - 2026 | <span class="app-version-text" data-prefix="V"></span>
+        </footer>
+    </div>
+
+    <!-- Modal Transaction -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;" id="transaction-modal-title">Nueva Transacción</h2>
+            <form id="transaction-form">
+                <input type="hidden" id="transaction-id" name="id">
+                <div class="form-row">
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" name="type" id="tx-type" required>
+                            <option value="expense">Gasto</option>
+                            <option value="income">Ingreso</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label">Monto</label>
+                        <input type="number" class="form-input" name="amount" step="0.01" min="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" class="form-input" name="date" required>
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label">Moneda (heredada)</label>
+                        <input type="text" class="form-input" id="tx-currency-display" value="ARS" readonly
+                            style="background: var(--bg-tertiary); cursor: not-allowed;">
+                        <input type="hidden" name="currency" id="tx-currency" value="ARS">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoría</label>
+                    <select class="form-select" name="category" id="tx-category" required></select>
+                </div>
+                <div class="form-group hidden" id="subcategory-group">
+                    <label class="form-label">Subcategoría</label>
+                    <select class="form-select" name="subcategory" id="tx-subcategory"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <input type="text" class="form-input" name="description"
+                        placeholder="Descripción de la transacción">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Caja/Billetera</label>
+                    <select class="form-select" name="walletId" id="tx-wallet">
+                        <option value="">Sin caja específica</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Método de Pago</label>
+                    <select class="form-select" name="paymentMethod" id="payment-method" required>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Débito">Tarjeta de Débito</option>
+                        <option value="Crédito">Tarjeta de Crédito</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Ahorro">Ahorro</option>
+                    </select>
+                </div>
+                <div class="form-group hidden" id="card-group">
+                    <label class="form-label">Tarjeta</label>
+                    <select class="form-select" name="card" id="tx-card"></select>
+                </div>
+                <div class="form-group hidden" id="installments-group">
+                    <label class="form-label">Cuotas</label>
+                    <input type="number" class="form-input" name="installments" min="1" max="60" value="1">
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;"
+                        id="transaction-submit-btn">Guardar</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-transaction-btn">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Polyfill para storage -->
+    <script>
+        if (typeof window.storage === 'undefined') {
+            window.storage = {
+                async get(key) {
+                    const value = localStorage.getItem(key);
+                    return value ? { key, value } : null;
+                },
+                async set(key, value) {
+                    localStorage.setItem(key, value);
+                    return { key, value };
+                },
+                async delete(key) {
+                    localStorage.removeItem(key);
+                    return { key, deleted: true };
+                },
+                async list(prefix) {
+                    const keys = Object.keys(localStorage).filter(k => k.startsWith(prefix || ''));
+                    return { keys };
+                }
+            };
+        }
+
+        if (typeof process === 'undefined') {
+            window.process = {
+                env: {
+                    NODE_ENV: 'production'
+                }
+            };
+        }
+    </script>
+
+    <!-- Módulos JavaScript -->
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
