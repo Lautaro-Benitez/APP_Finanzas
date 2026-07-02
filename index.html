@@ -1516,7 +1516,14 @@
 
             // Funcionalidad del botón
             document.getElementById('btn-update-reload').addEventListener('click', () => {
-                window.location.reload(true);
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    // Decirle al Service Worker que borre la caché vieja
+                    navigator.serviceWorker.controller.postMessage('CLEAR_CACHE');
+                }
+                // Esperar medio segundo para que borre y forzar recarga desde el servidor
+                setTimeout(() => {
+                    window.location.reload(true);
+                }, 500);
             });
         })();
     </script>

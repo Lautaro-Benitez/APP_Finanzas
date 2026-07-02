@@ -2,7 +2,7 @@
 
 [![Live](https://img.shields.io/badge/live-online-success)](https://lautaro-benitez.github.io/APP_Finanzas/)
 [![Version](https://img.shields.io/badge/version-3.4.0-blue)](CHANGELOG.md)
-[![License](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ![Windows](https://img.shields.io/badge/Windows-supported-blue?style=flat&logo=windows&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-supported-blue?style=flat&logo=apple&logoColor=white)
