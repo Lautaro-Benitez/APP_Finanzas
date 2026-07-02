@@ -38,12 +38,17 @@ try {
     fs.writeFileSync(indexPath, indexHtml);
     console.log("✅ index.html actualizado");
 
-    // 5. Actualizar README.md
+    // 5. Actualizar sw.js (CACHE_NAME)
+    const swPath = path.join(__dirname, 'sw.js');
+    let swJs = fs.readFileSync(swPath, 'utf8');
+    swJs = swJs.replace(/const CACHE_NAME = 'finanzapp-cache-[0-9\.]+';/, `const CACHE_NAME = 'finanzapp-cache-${newVersion}';`);
+    fs.writeFileSync(swPath, swJs);
+    console.log("✅ sw.js actualizado");
+
+    // 6. Actualizar README.md
     const readmePath = path.join(__dirname, 'README.md');
     let readme = fs.readFileSync(readmePath, 'utf8');
-    // Actualizar el título
     readme = readme.replace(/# 💰 FinanzApp - Gestión de Finanzas Personales \(V[0-9\.]+\)/, `# 💰 FinanzApp - Gestión de Finanzas Personales (V${newVersion})`);
-    // Actualizar el badge
     readme = readme.replace(/badge\/version-[0-9\.]+-blue/, `badge/version-${newVersion}-blue`);
     fs.writeFileSync(readmePath, readme);
     console.log("✅ README.md actualizado");

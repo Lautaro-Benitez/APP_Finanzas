@@ -1,50 +1,65 @@
-const CACHE_NAME = 'finanzapp-cache';
+const CACHE_NAME = 'finanzapp-cache-3.5.0'; // Editado automáticamente por bump.js
+
+const ASSETS_TO_CACHE = [
+    './',
+    './index.html',
+    './styles/main.css',
+    './js/app.js'
+    // El resto se cacheará en tiempo de ejecución (on the fly)
+];
 
 self.addEventListener('install', (event) => {
-    self.skipWaiting();
+    // Al instalar la nueva versión, pre-cacheamos los archivos clave.
+    // NO llamamos a skipWaiting() aquí. Queremos que el usuario controle cuándo actualizar.
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(ASSETS_TO_CACHE);
+        })
+    );
 });
 
 self.addEventListener('activate', (event) => {
+    // Cuando el nuevo SW toma el control, borramos todas las cachés viejas (las de versiones anteriores)
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
     event.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', (event) => {
-    const url = new URL(event.request.url);
-
-    // 1. NUNCA cachear el archivo version.json para que siempre pregunte a internet
-    if (url.pathname.includes('version.json')) {
-        event.respondWith(fetch(event.request));
-        return;
-    }
-
-    // 2. Para todo lo demás (HTML, CSS, JS, imágenes), usar CACHE-FIRST
-    // Esto hace que la app abra rapidísimo y funcione offline, y permite que
-    // el actualizador se dé cuenta de que está corriendo una versión vieja.
+    // Estrategia Cache-First (Offline First). 
+    // Busca en caché, si no está va a red, y si hay éxito lo guarda en caché.
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             if (cachedResponse) {
-                return cachedResponse; // Devolver desde caché si existe
+                return cachedResponse;
             }
             return fetch(event.request).then((networkResponse) => {
-                // Si no estaba en caché, pedir a internet y guardarlo para la próxima
-                return caches.open(CACHE_NAME).then((cache) => {
-                    if (event.request.method === 'GET' && networkResponse.status === 200) {
-                        cache.put(event.request, networkResponse.clone());
-                    }
-                    return networkResponse;
-                });
+                if (event.request.method === 'GET' && networkResponse.status === 200 && !event.request.url.startsWith('chrome-extension')) {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                    });
+                }
+                return networkResponse;
             }).catch(() => {
-                // Si no hay internet y no está en caché, no hacer nada (falla silenciosa)
+                // Falla silenciosa si no hay red y no está en caché
             });
         })
     );
 });
 
-// 3. Escuchar la orden de borrar la caché desde la página web
+// Escuchar mensaje del cliente para saltarse la espera y actualizar
 self.addEventListener('message', (event) => {
-    if (event.data === 'CLEAR_CACHE') {
-        caches.delete(CACHE_NAME).then(() => {
-            console.log('Caché antigua eliminada con éxito. Lista para la nueva versión.');
-        });
+    if (event.data === 'SKIP_WAITING') {
+        self.skipWaiting();
     }
 });
