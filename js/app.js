@@ -17,7 +17,7 @@ import { LoansManager } from './core/loans.js';
 
 class FinancialApp {
   constructor() {
-    this.version = '3.4.0'; // 🚀 Versión global del sistema
+    this.version = '3.5.0'; // 🚀 Versión global del sistema
     this.storage = new StorageManager();
     this.auth = new AuthManager(this.storage);
     this.currencyManager = new CurrencyManager(this.storage);

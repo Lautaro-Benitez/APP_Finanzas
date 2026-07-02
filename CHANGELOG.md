@@ -6,6 +6,14 @@
 
 Todas las modificaciones y mejoras notables de este proyecto se documentarán en este archivo.
 
+## [3.5.0] - 2026-07-02
+### Arreglado
+- **Actualizador PWA (Service Worker):** Se reescribió la estrategia del Service Worker a *Cache-First* para asegurar que el actualizador OTA (Over The Air) detecte cambios correctamente usando el archivo `version.json` sin redescargas invisibles.
+- **Forzado de Actualización:** El botón "Recargar ahora" del modal de actualización ahora envía una orden estricta (`CLEAR_CACHE`) al Service Worker para eliminar la caché antigua antes de refrescar.
+
+### Añadido
+- **Automatización de Versiones:** Nuevo script `bump.js` ejecutable mediante `npm run bump <version>` para sincronizar de forma centralizada la versión en todos los archivos del proyecto (package.json, HTML, JS, README, version.json).
+
 ## [3.4.0] - 2026-07-02
 ### Añadido
 - **Soporte PWA (Progressive Web App):** Ahora la aplicación puede instalarse nativamente en sistemas de escritorio (Windows, macOS, Linux) directamente desde el navegador a través de un nuevo modal de instalación.
