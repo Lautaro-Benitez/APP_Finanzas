@@ -1,4 +1,4 @@
-const CACHE_NAME = 'finanzapp-cache-3.8.0'; // Editado automáticamente por bump.js
+const CACHE_NAME = 'finanzapp-cache-3.8.1'; // Editado automáticamente por bump.js
 
 const ASSETS_TO_CACHE = [
     './',

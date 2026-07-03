@@ -6,6 +6,11 @@
 
 Todas las modificaciones y mejoras notables de este proyecto se documentarán en este archivo.
 
+## [3.8.1] - 2026-07-03
+### Añadido
+- **Documentación Visual:** Se agregó la primera captura de pantalla oficial de la interfaz (`Captura_de_pantalla_1.png`) directamente al inicio del `README.md` del repositorio, mejorando la presentación del proyecto.
+- **Forzado de Despliegue:** Incremento de versión diseñado para eludir incidencias técnicas en los servidores internos de *GitHub Pages* y forzar un nuevo ciclo de empaquetado.
+
 ## [3.8.0] - 2026-07-03
 ### Arreglado
 - **Dashboard Gráficos (Crítico):** Se solucionó, un bug en la generación de gráficos (`Chart.js`) que destruía permanentemente los elementos del DOM al consultar períodos sin transacciones. Ahora los gráficos alternan correctamente la visibilidad del "Estado Vacío" sin romperse, permitiendo transicionar entre diferentes rangos de fechas (Ej: "Este Mes" a "Esta Semana" y viceversa).

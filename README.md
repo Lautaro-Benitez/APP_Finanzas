@@ -1,7 +1,7 @@
-# 💰 FinanzApp - Gestión de Finanzas Personales (V3.8.0)
+# 💰 FinanzApp - Gestión de Finanzas Personales (V3.8.1)
 
 [![Live](https://img.shields.io/badge/live-online-success)](https://lautaro-benitez.github.io/APP_Finanzas/)
-[![Version](https://img.shields.io/badge/version-3.8.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.8.1-blue)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ![Windows](https://img.shields.io/badge/Windows-supported-blue?style=flat&logo=windows&logoColor=white)
@@ -16,6 +16,8 @@
 [![Node.js](https://img.shields.io/badge/Node.js-Backend-43853D?style=flat&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 
 **FinanzApp** es una potente aplicación de escritorio diseñada para el control total de tus finanzas personales de manera local, privada y segura. 
+
+![Captura de pantalla de FinanzApp](Captura_de_pantalla_1.png)
 
 ---
 
