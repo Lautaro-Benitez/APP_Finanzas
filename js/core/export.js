@@ -12,6 +12,58 @@ export class ExportManager {
     this.transactions = transactions;
   }
 
+  // NUEVO: Genera el JSON del backup completo sin descargarlo (usado por la sincronización automática)
+  async generateBackupData() {
+      const safeGet = async (method, defaultVal) => {
+        if (this.storage && typeof this.storage[method] === 'function') {
+          try {
+            return await this.storage[method]();
+          } catch (e) {
+            return defaultVal;
+          }
+        }
+        return defaultVal;
+      };
+
+      const [
+        transactions, budgets, savings, wallets, categories, cards, loans, exchangeRates, settings, users
+      ] = await Promise.all([
+        safeGet('getTransactions', []),
+        safeGet('getBudgets', []),
+        safeGet('getSavings', []),
+        safeGet('getWallets', []),
+        safeGet('getCategories', { income: [], expense: [] }),
+        safeGet('getCards', []),
+        safeGet('getLoans', []),
+        safeGet('getExchangeRates', {}),
+        safeGet('getSettings', {}),
+        safeGet('getUsers', [])
+      ]);
+
+      return {
+        metadata: {
+          version: '2.1.0',
+          exportDate: new Date().toISOString(),
+          source: 'FinanzApp Backup',
+          type: 'complete',
+          storage: this.getStorageType(),
+          itemsCount: {
+            transactions: transactions.length,
+            budgets: budgets.length,
+            savings: savings.length,
+            wallets: wallets.length,
+            categories: (categories.income?.length || 0) + (categories.expense?.length || 0),
+            cards: cards.length,
+            loans: loans.length,
+            users: users.length
+          }
+        },
+        data: {
+          transactions, budgets, savings, wallets, categories, cards, loans, exchangeRates, settings, users
+        }
+      };
+  }
+
   /**
  * ✅ MÉTODO PRINCIPAL: Exportar backup completo del sistema
  * Incluye TODOS los datos: transacciones, presupuestos, ahorros, wallets, etc.

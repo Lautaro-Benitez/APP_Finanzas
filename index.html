@@ -1159,23 +1159,48 @@
 
                         <button class="btn btn-warning" id="import-backup-btn"
                             style="width: 100%; justify-content: center;">
-                            ⚠️ Restaurar Backup (Reemplaza TODO)
+                            Restaurar Backup
                         </button>
 
                         <!-- Advertencias -->
                         <div
-                            style="margin-top: 16px; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border-left: 3px solid var(--danger);">
-                            <div style="font-size: 12px; color: var(--danger); font-weight: 600; margin-bottom: 6px;">
+                            style="margin-top: 16px; padding: 12px; background: rgba(245, 158, 11, 0.15); border-radius: 8px; border: none;">
+                            <div
+                                style="font-size: 12px; color: var(--warning); font-weight: 600; margin-bottom: 6px;">
                                 ⚠️ ADVERTENCIA
                             </div>
                             <ul
-                                style="font-size: 11px; color: var(--text-secondary); margin: 0; padding-left: 20px; line-height: 1.6;">
+                                style="font-size: 11px; color: var(--warning); margin: 0; padding-left: 20px; line-height: 1.6;">
                                 <li>Esta acción REEMPLAZARÁ todos los datos actuales</li>
                                 <li>Se recomienda hacer un backup antes de importar</li>
                                 <li>El archivo será validado antes de importar</li>
                                 <li>Solo archivos JSON de FinanzApp son compatibles</li>
                             </ul>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Sincronización Automática de Directorio -->
+                <div class="card" style="margin-top: 24px;">
+                    <div style="justify-content: space-between; display: flex; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 12px;">
+                        <span style="font-size: 16px; font-weight: 600; color: var(--text-color);"><i class="fas fa-folder-open" style="margin-right: 8px;"></i> Carpeta de Sincronización Automática</span>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                            Guarda y sincroniza automáticamente toda tu información en una carpeta local de tu dispositivo.
+                        </p>
+                        
+                        <div style="background: var(--bg-secondary); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Ubicación de guardado:</div>
+                            <div id="sync-folder-name" style="font-size: 14px; font-weight: 600; color: var(--primary);">Ninguna carpeta seleccionada</div>
+                        </div>
+
+                        <button class="btn btn-primary" id="btn-select-sync-dir" style="width: 100%; justify-content: center; margin-bottom: 10px;">
+                            <i class="fas fa-folder"></i> Seleccionar Nueva Carpeta
+                        </button>
+                        <button class="btn btn-secondary" id="btn-force-sync" style="width: 100%; justify-content: center; display: none;">
+                            <i class="fas fa-sync"></i> Forzar Guardado Ahora
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1476,13 +1501,18 @@
     <div id="pwa-install-modal" class="modal">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
             <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
-                <h2 style="color: var(--primary-color);"><i class="fas fa-desktop" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>Instalar FinanzApp</h2>
+                <h2 style="color: var(--primary-color);"><i class="fas fa-desktop"
+                        style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>Instalar FinanzApp</h2>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom: 20px; color: var(--text-color);">Instala esta aplicación en tu computadora para acceder más rápido y usarla como un programa nativo de escritorio.</p>
+                <p style="margin-bottom: 20px; color: var(--text-color);">Instala esta aplicación en tu computadora para
+                    acceder más rápido y usarla como un programa nativo de escritorio.</p>
                 <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button type="button" class="btn btn-secondary" id="btn-pwa-cancel" onclick="document.getElementById('pwa-install-modal').classList.remove('active')">Quizás luego</button>
-                    <button type="button" class="btn btn-primary" id="btn-pwa-install"><i class="fas fa-download"></i> Instalar App</button>
+                    <button type="button" class="btn btn-secondary" id="btn-pwa-cancel"
+                        onclick="document.getElementById('pwa-install-modal').classList.remove('active')">Quizás
+                        luego</button>
+                    <button type="button" class="btn btn-primary" id="btn-pwa-install"><i class="fas fa-download"></i>
+                        Instalar App</button>
                 </div>
             </div>
         </div>
@@ -1496,7 +1526,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(registration => {
-                    
+
                     // Buscar actualizaciones periódicamente cada 5 minutos de forma silenciosa
                     setInterval(() => {
                         registration.update();
@@ -1535,7 +1565,7 @@
         function mostrarModalActualizacion(worker) {
             const modal = document.getElementById('update-modal');
             modal.classList.add('active');
-            
+
             // Funcionalidad del botón de actualización
             document.getElementById('btn-update-reload').onclick = () => {
                 // Al hacer clic, forzamos a la nueva versión a tomar el control y borrar cachés viejos

@@ -6,6 +6,16 @@ export class ModalManager {
   constructor(uiManager) {
     this.ui = uiManager;
     this.app = uiManager.app;
+
+    // Escuchar la tecla ESC para cerrar modales (excepto instalación PWA y configuración Sync)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const activeModal = document.querySelector('.modal.active');
+        if (activeModal && activeModal.id !== 'pwa-install-modal' && activeModal.id !== 'sync-setup-modal') {
+          activeModal.classList.remove('active');
+        }
+      }
+    });
   }
 
   // ========================================

@@ -46,6 +46,9 @@ export class UIManager {
 
     // ✅ NUEVO: Verificar límites de almacenamiento al iniciar
     this.checkStorageOnInit();
+
+    // ✅ NUEVO: Inicializar sistema de sincronización de directorio local
+    await this.initDirectorySync();
   }
   
   // ✅ NUEVO: Método para inyectar la versión en el DOM
@@ -71,6 +74,164 @@ export class UIManager {
     } catch (error) {
       console.error('Error verificando storage:', error);
     }
+  }
+
+  // ✅ NUEVO: Sistema de Persistencia de Directorio
+  async initDirectorySync() {
+    try {
+      this.setupButton('btn-select-sync-dir', () => this.selectSyncDirectory());
+      this.setupButton('btn-force-sync', () => this.forceSyncDirectory());
+
+      // Verificar si ya hay un handle guardado en Dexie
+      let syncHandle = null;
+      if (this.app.storage.db.settings) {
+         const record = await this.app.storage.db.settings.get('sync_dir_handle');
+         if (record) syncHandle = record.value;
+      }
+      
+      if (syncHandle) {
+        this.syncDirHandle = syncHandle;
+        const hasPermission = await this.verifySyncPermission(this.syncDirHandle, false);
+        
+        if (hasPermission) {
+          this.updateSyncUI();
+          this.startAutoSync();
+        } else {
+          // Requiere gesto del usuario para reconectar
+          document.getElementById('sync-folder-name').textContent = "Requiere reconectar (Haz clic abajo)";
+          document.getElementById('sync-folder-name').style.color = "var(--warning)";
+          const btn = document.getElementById('btn-select-sync-dir');
+          btn.innerHTML = '<i class="fas fa-plug"></i> Reconectar Carpeta Automática';
+          btn.onclick = async () => {
+             const granted = await this.verifySyncPermission(this.syncDirHandle, true);
+             if (granted) {
+               this.updateSyncUI();
+               this.startAutoSync();
+               this.forceSyncDirectory(true); // Forzamos un backup al reconectar
+               this.showToast('Carpeta reconectada exitosamente', 'success');
+             } else {
+               this.selectSyncDirectory();
+             }
+          };
+        }
+      } else {
+        // Primera vez: forzamos a seleccionar
+        this.showStartupDirectoryModal();
+      }
+    } catch (err) {
+      console.warn("Sincronización de directorio no soportada o error:", err);
+    }
+  }
+
+  showStartupDirectoryModal() {
+    const modalHTML = `
+      <div id="sync-setup-modal" class="modal active" style="z-index: 9999;">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none;">
+                <h2 style="color: var(--primary-color);"><i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>Configurar Guardado Local</h2>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: var(--text-color);">Selecciona una carpeta en tu computadora donde la aplicación guardará automáticamente una copia de toda tu información de forma segura.</p>
+                <div style="display: flex; justify-content: center;">
+                    <button type="button" class="btn btn-primary" id="btn-sync-select"><i class="fas fa-check"></i> Seleccionar Carpeta</button>
+                </div>
+            </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    document.getElementById('btn-sync-select').onclick = async () => {
+        document.getElementById('sync-setup-modal').remove();
+        await this.selectSyncDirectory();
+    };
+  }
+
+  async selectSyncDirectory() {
+    try {
+      if (!window.showDirectoryPicker) {
+        this.showToast('Tu navegador no soporta esta función avanzada.', 'error');
+        return;
+      }
+      
+      const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      
+      // Guardar en Dexie
+      if (this.app.storage.db.settings) {
+         await this.app.storage.db.settings.put({ id: 'sync_dir_handle', value: dirHandle });
+      }
+      
+      this.syncDirHandle = dirHandle;
+      
+      // Restaurar el botón original por si venía de un intento de reconexión
+      this.setupButton('btn-select-sync-dir', () => this.selectSyncDirectory());
+      
+      this.updateSyncUI();
+      this.startAutoSync();
+      
+      // Hacer el primer backup enseguida
+      this.forceSyncDirectory(false);
+      
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Error al seleccionar carpeta:', err);
+        this.showToast('Error al vincular carpeta', 'error');
+      }
+    }
+  }
+
+  updateSyncUI() {
+     if (this.syncDirHandle) {
+         document.getElementById('sync-folder-name').textContent = 'Local / ' + this.syncDirHandle.name;
+         document.getElementById('sync-folder-name').style.color = 'var(--primary-color)';
+         const btn = document.getElementById('btn-select-sync-dir');
+         btn.innerHTML = '<i class="fas fa-folder"></i> Cambiar Carpeta';
+         document.getElementById('btn-force-sync').style.display = 'flex';
+     }
+  }
+
+  async verifySyncPermission(fileHandle, withUserGesture = false) {
+    const opts = { mode: 'readwrite' };
+    if ((await fileHandle.queryPermission(opts)) === 'granted') {
+      return true;
+    }
+    if (withUserGesture) {
+      if ((await fileHandle.requestPermission(opts)) === 'granted') {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  startAutoSync() {
+    if (this.autoSyncInterval) clearInterval(this.autoSyncInterval);
+    // Cada 5 minutos
+    this.autoSyncInterval = setInterval(() => {
+        this.forceSyncDirectory(true);
+    }, 300000);
+  }
+
+  async forceSyncDirectory(silent = false) {
+     if (!this.syncDirHandle) return;
+     try {
+         const hasPerm = await this.verifySyncPermission(this.syncDirHandle, false);
+         if (!hasPerm) {
+             if (!silent) this.showToast('Falta permiso de escritura', 'error');
+             return;
+         }
+         
+         const fileHandle = await this.syncDirHandle.getFileHandle('finanzapp_backup_auto.json', { create: true });
+         const writable = await fileHandle.createWritable();
+         const backupData = await this.app.exportManager.generateBackupData();
+         
+         await writable.write(JSON.stringify(backupData, null, 2));
+         await writable.close();
+         
+         if (!silent) this.showToast(`Guardado auto en ${this.syncDirHandle.name}`, 'success');
+     } catch (err) {
+         console.error('Error en autosync:', err);
+         if (!silent) this.showToast('Error al guardar en carpeta', 'error');
+     }
   }
 
   setupEventListeners() {

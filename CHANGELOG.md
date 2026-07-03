@@ -6,6 +6,15 @@
 
 Todas las modificaciones y mejoras notables de este proyecto se documentarán en este archivo.
 
+## [3.7.0] - 2026-07-03
+### Añadido
+- **Sincronización Automática Local:** Nuevo sistema de persistencia de directorio (`Directory Handle Persistence`). Permite al usuario seleccionar una carpeta local obligatoria al iniciar la app, donde el sistema guardará automáticamente una copia de seguridad (`finanzapp_backup_auto.json`) cada 5 minutos.
+- **Teclas Rápidas:** Soporte para la tecla `ESC` que permite cerrar rápidamente cualquier modal activo (con excepción de modales críticos como la instalación PWA y configuración de sincronización).
+
+### Arreglado
+- **UI/UX Mejorado:** Eliminadas barras de desplazamiento visuales (scrollbars) innecesarias en todos los modales para una estética más limpia.
+- **Módulo de Reportes:** Rediseño del cuadro de advertencia de restauración con fondo transparente y tipografía amarilla, y estilización del panel de sincronización con indicador de ruta "Local".
+
 ## [3.6.0] - 2026-07-02
 ### Arreglado
 - **Flujo PWA Estable:** Refactorización manual y definitiva del ciclo de vida del Service Worker y `index.html`. Se eliminó la dependencia del viejo `version.json` para evitar bucles infinitos por culpa de las cachés CDN. Ahora el sistema detecta de forma robusta las actualizaciones escuchando el evento nativo `updatefound` del navegador.
