@@ -6,6 +6,14 @@
 
 Todas las modificaciones y mejoras notables de este proyecto se documentarán en este archivo.
 
+## [3.8.0] - 2026-07-03
+### Arreglado
+- **Dashboard Gráficos (Crítico):** Se solucionó un bug en la generación de gráficos (`Chart.js`) que destruía permanentemente los elementos del DOM al consultar períodos sin transacciones. Ahora los gráficos alternan correctamente la visibilidad del "Estado Vacío" sin romperse, permitiendo transicionar entre diferentes rangos de fechas (Ej: "Este Mes" a "Esta Semana" y viceversa).
+- **Dashboard Checkboxes:** Se reparó el filtrado dinámico del gráfico de *Tendencias Financieras*, forzando al sistema a reconstruir los *datasets* cada vez que el usuario marca o desmarca las opciones de Ingresos, Gastos o Balance.
+
+### UI/UX Mejorado
+- **Diseño Minimalista:** Eliminación sistemática de los bordes laterales izquierdos en múltiples componentes clave del Dashboard (Tarjetas de cajas/billeteras, indicadores financieros, alertas de presupuestos y recordatorios de pago). El estilo de las tarjetas ahora descansa enteramente en sus sombras, logrando un aspecto más integrado y elegante.
+
 ## [3.7.0] - 2026-07-03
 ### Añadido
 - **Sincronización Automática Local:** Nuevo sistema de persistencia de directorio (`Directory Handle Persistence`). Permite al usuario seleccionar una carpeta local obligatoria al iniciar la app, donde el sistema guardará automáticamente una copia de seguridad (`finanzapp_backup_auto.json`) cada 5 minutos.

@@ -648,7 +648,7 @@ body {
   padding: 14px;
   border-radius: 10px;
   margin-bottom: 10px;
-  border-left: 4px solid;
+
   font-weight: 500;
   animation: slideInAlert 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -788,19 +788,19 @@ body {
 }
 
 .toast-success {
-  border-left: 4px solid var(--success);
+
 }
 
 .toast-error {
-  border-left: 4px solid var(--danger);
+
 }
 
 .toast-warning {
-  border-left: 4px solid var(--warning);
+
 }
 
 .toast-info {
-  border-left: 4px solid var(--info);
+
 }
 
 .toast-close {
@@ -895,7 +895,7 @@ body {
   position: relative;
   padding: 20px;
   min-height: 180px;
-  border-left: 4px solid var(--primary);
+
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -925,27 +925,27 @@ body {
 
 /* Tipos de wallet específicos */
 .wallet-card.efectivo {
-  border-left-color: #10b981;
+
 }
 
 .wallet-card.banco {
-  border-left-color: #3b82f6;
+
 }
 
 .wallet-card.billetera-virtual {
-  border-left-color: #8b5cf6;
+
 }
 
 .wallet-card.caja-fisica {
-  border-left-color: #f59e0b;
+
 }
 
 .wallet-card.acciones {
-  border-left-color: #06b6d4;
+
 }
 
 .wallet-card.otro {
-  border-left-color: #64748b;
+
 }
 
 /* Indicadores de saldo */
@@ -1038,7 +1038,7 @@ body {
 .indicator-card {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-left: 4px solid transparent;
+
 }
 
 .indicator-card:hover {
@@ -1047,15 +1047,15 @@ body {
 }
 
 .indicator-card.status-ok {
-  border-left-color: var(--success);
+
 }
 
 .indicator-card.status-warning {
-  border-left-color: var(--warning);
+
 }
 
 .indicator-card.status-danger {
-  border-left-color: var(--danger);
+
 }
 
 /* STATS VALUE - Mejoras en valores estadísticos */
@@ -2186,7 +2186,7 @@ input[type="date"]::-moz-calendar-picker-indicator {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 20px;
-  border-left: 4px solid var(--text-secondary);
+
   transition: all 0.3s ease;
 }
 
@@ -2196,22 +2196,22 @@ input[type="date"]::-moz-calendar-picker-indicator {
 }
 
 .pending-installment-card.overdue {
-  border-left-color: var(--danger);
+
   background: rgba(239, 68, 68, 0.05);
 }
 
 .pending-installment-card.urgent {
-  border-left-color: var(--warning);
+
   background: rgba(245, 158, 11, 0.05);
 }
 
 .pending-installment-card.warning {
-  border-left-color: #fbbf24;
+
   background: rgba(251, 191, 36, 0.03);
 }
 
 .pending-installment-card.ok {
-  border-left-color: var(--success);
+
 }
 
 .alert-badge {
@@ -2246,16 +2246,16 @@ input[type="date"]::-moz-calendar-picker-indicator {
   background: var(--bg-secondary);
   border-radius: 12px;
   padding: 20px;
-  border-left: 4px solid;
+
 }
 
 .alert-card.alert-danger {
-  border-left-color: var(--danger);
+
   background: rgba(239, 68, 68, 0.1);
 }
 
 .alert-card.alert-warning {
-  border-left-color: var(--warning);
+
   background: rgba(245, 158, 11, 0.1);
 }
 

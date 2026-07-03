@@ -65,6 +65,8 @@ export class ChartManager {
       return;
     }
 
+    this.hideNoDataMessage(ctx);
+
     this.charts.category = new Chart(ctx, {
       type: 'doughnut',
       data: {
@@ -125,6 +127,8 @@ export class ChartManager {
       return;
     }
 
+    this.hideNoDataMessage(ctx);
+
     this.charts.income = new Chart(ctx, {
       type: 'doughnut',
       data: {
@@ -177,6 +181,7 @@ export class ChartManager {
 
     // ✅ OPTIMIZACIÓN: Solo actualizar datos si el gráfico ya existe
     if (this.charts.metrics) {
+      this.hideNoDataMessage(ctx);
       await this.updateMetricsChartData(period);
       return;
     }
@@ -210,6 +215,8 @@ export class ChartManager {
         this.showNoDataMessage(ctx, 'Selecciona al menos una métrica para mostrar');
         return;
       }
+
+      this.hideNoDataMessage(ctx);
 
       this.charts.metrics = new Chart(ctx, {
         type: 'line',
@@ -434,14 +441,36 @@ export class ChartManager {
     const parent = element.parentElement;
     if (!parent) return;
 
-    parent.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; height: 280px; color: var(--text-secondary); text-align: center; padding: 20px;">
+    // Ocultar el canvas en lugar de eliminarlo
+    element.style.display = 'none';
+
+    let noData = parent.querySelector('.no-data-msg');
+    if (!noData) {
+      noData = document.createElement('div');
+      noData.className = 'no-data-msg';
+      noData.style = "display: flex; align-items: center; justify-content: center; height: 100%; min-height: 250px; color: var(--text-secondary); text-align: center; padding: 20px;";
+      parent.appendChild(noData);
+    }
+    
+    noData.innerHTML = `
         <div>
           <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">📊</div>
           <p style="margin: 0;">${message}</p>
         </div>
-      </div>
     `;
+    noData.style.display = 'flex';
+  }
+
+  hideNoDataMessage(element) {
+    const parent = element.parentElement;
+    if (!parent) return;
+
+    element.style.display = ''; // Restaurar canvas
+    
+    const noData = parent.querySelector('.no-data-msg');
+    if (noData) {
+      noData.style.display = 'none';
+    }
   }
 
   showErrorMessage(element, message) {
@@ -509,21 +538,19 @@ export class ChartManager {
 
       const chart = this.charts.metrics;
 
-      // Actualizar datos de los datasets existentes
+      // Actualizar labels
       chart.data.labels = data.labels;
 
-      // Mapeo seguro de datasets por label
-      const datasetMap = {
-        'Ingresos': data.income,
-        'Gastos': data.expenses,
-        'Balance': data.balance
-      };
-
-      chart.data.datasets.forEach(dataset => {
-        if (datasetMap[dataset.label]) {
-          dataset.data = datasetMap[dataset.label];
-        }
-      });
+      // Reconstruir datasets basados en el estado actual de los checkboxes
+      const newDatasets = this.buildChartDatasets(data);
+      
+      if (newDatasets.length === 0) {
+        this.showNoDataMessage(document.getElementById('metrics-chart'), 'Selecciona al menos una métrica para mostrar');
+        return;
+      }
+      
+      this.hideNoDataMessage(document.getElementById('metrics-chart'));
+      chart.data.datasets = newDatasets;
 
       // Actualización optimizada sin animación completa
       chart.update('none');

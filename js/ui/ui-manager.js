@@ -778,7 +778,7 @@ export class UIManager {
 
           if (paymentReminders.length > 0) {
             const remindersHTML = paymentReminders.map(reminder => `
-              <div data-reminder-alert style="display: flex; flex-direction: column; gap: 4px; padding: 12px; background: ${reminder.priority === 'high' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)'}; border-radius: 8px; border-left: 3px solid ${reminder.priority === 'high' ? 'var(--danger)' : 'var(--warning)'}; margin-bottom: 8px;">
+              <div data-reminder-alert style="display: flex; flex-direction: column; gap: 4px; padding: 12px; background: ${reminder.priority === 'high' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)'}; border-radius: 8px;  margin-bottom: 8px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span style="font-size: 13px; color: ${reminder.priority === 'high' ? 'var(--danger)' : 'var(--warning)'}; font-weight: 600;">
                     ${reminder.priority === 'high' ? '🔴' : '🟡'} ${reminder.message}
@@ -1753,7 +1753,7 @@ export class UIManager {
           </p>
         </div>
 
-        <div style="background: rgba(239, 68, 68, 0.1); border-radius: 8px; padding: 16px; margin-bottom: 20px; border-left: 4px solid var(--danger);">
+        <div style="background: rgba(239, 68, 68, 0.1); border-radius: 8px; padding: 16px; margin-bottom: 20px; ">
           <div style="font-size: 13px; line-height: 1.6; color: var(--text-primary);">
             <strong>⚠️ Riesgo de pérdida de datos:</strong><br>
             ${!daysSince || daysSince >= 14
